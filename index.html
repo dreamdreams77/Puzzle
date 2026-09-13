@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Piecework — turn any photo into a jigsaw puzzle</title>
-<meta name="description" content="Upload a photo, cut it into a real jigsaw puzzle, solve it on screen, then print it to cut out." />
+<title>Piecework — turn any photo into a jigsaw puzzle game</title>
+<meta name="description" content="Upload a photo, cut it into a real jigsaw puzzle, solve it on screen, or play the campaign — 10 levels, stars, achievements, and real piece-to-piece connecting." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=Rubik:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -45,7 +45,7 @@
   .app { max-width: 1180px; margin: 0 auto; padding: 22px clamp(14px, 3vw, 34px) 60px; }
 
   /* ---------- Header ---------- */
-  header.top { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 18px; }
+  header.top { display: flex; align-items: baseline; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; justify-content: space-between; }
   .wordmark {
     font-family: "Chakra Petch", sans-serif;
     font-weight: 700;
@@ -62,6 +62,17 @@
     filter: drop-shadow(0 0 12px var(--glow-cyan)) drop-shadow(0 0 16px var(--glow-pink));
   }
   .tagline { color: var(--muted); font-size: 15px; max-width: 42ch; margin: 4px 0 0; }
+  .header-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+  /* ---------- Mode tabs ---------- */
+  .mode-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+  .mode-tab {
+    font-family: "Chakra Petch", sans-serif; font-weight: 700; font-size: 13px; letter-spacing: .04em;
+    padding: 9px 18px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--paper); color: var(--muted); cursor: pointer; transition: background .15s, color .15s, border-color .15s;
+  }
+  .mode-tab:hover { border-color: var(--marigold-deep); }
+  .mode-tab.active { background: linear-gradient(135deg, #2fe4ea, #8b6dff); color: #0a0a1a; border-color: transparent; }
 
   /* ---------- Layout ---------- */
   .layout { display: grid; grid-template-columns: 320px 1fr; gap: 22px; align-items: start; }
@@ -165,6 +176,31 @@
   .switch input:focus-visible + .track { outline: 2px solid var(--marigold-deep); outline-offset: 2px; }
   .switch-label em { font-style: normal; color: var(--muted); font-weight: 500; }
 
+  /* ---------- Campaign panel ---------- */
+  .campaign-blurb { color: var(--muted); font-size: 13px; margin: 0 0 12px; }
+  .levels-grid { display: flex; flex-direction: column; gap: 8px; max-height: 560px; overflow-y: auto; padding-right: 2px; }
+  .level-card {
+    display: flex; align-items: center; gap: 10px; text-align: left;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 12px; padding: 8px;
+    cursor: pointer; font-family: inherit; color: var(--ink); position: relative;
+    transition: border-color .15s, transform .08s;
+  }
+  .level-card:hover:not(:disabled) { border-color: var(--marigold-deep); }
+  .level-card:active:not(:disabled) { transform: translateY(1px); }
+  .level-card.active { border-color: var(--marigold); box-shadow: 0 0 0 1px rgba(47,228,234,.35); }
+  .level-card:disabled { cursor: not-allowed; opacity: .48; }
+  .level-card canvas { width: 62px; height: 47px; border-radius: 8px; flex: none; display: block; }
+  .level-card .lv-num {
+    position: absolute; top: 4px; left: 4px; background: rgba(8,8,20,.75); color: var(--marigold);
+    font-family: "Chakra Petch", sans-serif; font-weight: 700; font-size: 10.5px; border-radius: 6px; padding: 1px 5px;
+  }
+  .lv-meta { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+  .lv-name { font-weight: 600; font-size: 13.5px; }
+  .lv-pieces { color: var(--muted); font-size: 11.5px; }
+  .lv-stars { font-size: 13px; letter-spacing: 1px; }
+  .mini-star { color: #3a3768; }
+  .mini-star.filled { color: #ffd766; text-shadow: 0 0 8px rgba(255,215,102,.6); }
+
   /* ---------- Board ---------- */
   .stage-wrap { min-width: 0; }
   .stage {
@@ -182,7 +218,7 @@
 
   /* HUD */
   .hud {
-    position: absolute; left: 20px; right: 20px; top: 20px;
+    position: absolute; left: 20px; right: 20px; top: 20px; z-index: 3;
     display: flex; align-items: center; gap: 10px; flex-wrap: wrap; pointer-events: none;
   }
   .chip {
@@ -198,6 +234,7 @@
     pointer-events: auto; cursor: pointer;
     background: rgba(10,10,26,.66); color: #ece9ff; border: 1px solid rgba(47,228,234,.22);
     border-radius: 999px; padding: 7px 12px; font-size: 13px; font-weight: 600; display: inline-flex; gap: 7px; align-items: center;
+    font-family: inherit;
   }
   .iconbtn:hover { background: rgba(20,20,46,.9); border-color: rgba(47,228,234,.45); }
   .iconbtn.on { background: var(--marigold); color: #0a0a1a; border-color: rgba(47,228,234,.6); box-shadow: 0 0 16px -3px var(--glow-cyan); }
@@ -214,10 +251,16 @@
     border: 1px solid rgba(47,228,234,.3);
     box-shadow: 0 0 40px -8px var(--glow-pink), 0 0 0 1px rgba(255,90,168,.15);
     animation: pop .4s cubic-bezier(.2,1.4,.4,1);
+    max-width: 92vw;
   }
   @keyframes pop { from { transform: scale(.7); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-  .win h3 { font-family: "Chakra Petch", sans-serif; font-size: 30px; margin: 0 0 4px; color: var(--berry); text-shadow: 0 0 16px var(--glow-pink); }
-  .win p { margin: 0 0 16px; color: var(--muted); }
+  .win h3 { font-family: "Chakra Petch", sans-serif; font-size: 28px; margin: 0 0 4px; color: var(--berry); text-shadow: 0 0 16px var(--glow-pink); }
+  .win p { margin: 0 0 10px; color: var(--muted); }
+  .stars-row { display: flex; gap: 8px; justify-content: center; margin: 6px 0 16px; font-size: 32px; }
+  .stars-row .star { color: #3a3768; transition: color .2s, transform .2s; }
+  .stars-row .star.filled { color: #ffd766; text-shadow: 0 0 14px rgba(255,215,102,.7); transform: scale(1.08); }
+  .win-btns { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .win-btns .btn { width: auto; padding: 10px 20px; }
 
   .stage-hint { color: var(--muted); font-size: 13px; margin: 12px 4px 0; text-align: center; }
 
@@ -225,6 +268,30 @@
 
   .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
   a { color: var(--marigold-deep); }
+
+  /* ---------- Toasts ---------- */
+  .toast-wrap { position: fixed; top: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; z-index: 80; pointer-events: none; max-width: 280px; }
+  .toast {
+    background: var(--paper); border: 1px solid rgba(47,228,234,.4); border-radius: 12px; padding: 10px 14px;
+    box-shadow: var(--shadow); transform: translateX(120%); opacity: 0; transition: transform .3s ease, opacity .3s ease;
+  }
+  .toast strong { display: block; font-family: "Chakra Petch", sans-serif; color: var(--marigold); font-size: 13px; }
+  .toast span { display: block; color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .toast.show { transform: translateX(0); opacity: 1; }
+
+  /* ---------- Modal (achievements) ---------- */
+  .modal-overlay { position: fixed; inset: 0; background: rgba(6,6,16,.72); display: none; align-items: center; justify-content: center; z-index: 90; padding: 16px; }
+  .modal-overlay.show { display: flex; }
+  .modal-card { background: var(--paper); border: 1px solid var(--line); border-radius: 16px; padding: 20px; max-width: 460px; width: 100%; max-height: 82vh; overflow-y: auto; box-shadow: var(--shadow); }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .modal-head h3 { font-family: "Chakra Petch", sans-serif; margin: 0; font-size: 18px; }
+  .modal-close { background: transparent; border: none; color: var(--muted); font-size: 18px; cursor: pointer; padding: 4px; }
+  .ach-item { display: flex; gap: 12px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .ach-item:last-child { border-bottom: none; }
+  .ach-item.locked { opacity: .42; }
+  .ach-item .ico { font-size: 21px; line-height: 1.3; }
+  .ach-item strong { font-size: 13.5px; }
+  .ach-item .desc { color: var(--muted); font-size: 12.3px; margin-top: 2px; }
 
   @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
 
@@ -244,63 +311,80 @@
   <header class="top">
     <div>
       <h1 class="wordmark">PIECE<span class="cut">WORK</span></h1>
-      <p class="tagline">Turn any photo into a real jigsaw — solve it on screen, or print it to cut out at the table.</p>
+      <p class="tagline">Turn any photo into a real jigsaw — or play the campaign. Pieces click together for real.</p>
+    </div>
+    <div class="header-right">
+      <span class="chip" id="profileStars">⭐ 0/30</span>
+      <button class="iconbtn" id="achBtn" title="Achievements">🏆 <span id="achCount">0/8</span></button>
     </div>
   </header>
+
+  <div class="mode-tabs">
+    <button class="mode-tab active" id="tabCampaign">🗺️ Campaign</button>
+    <button class="mode-tab" id="tabFree">🖼️ Free Play</button>
+  </div>
 
   <div class="layout">
     <!-- Controls -->
     <div>
-      <div class="panel">
-        <h2>1 · Your photo</h2>
-        <div class="drop" id="drop" role="button" tabindex="0" aria-label="Upload a photo">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2fe4ea" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v13"/>
-          </svg>
-          <div class="big">Drop a photo here</div>
-          <div class="sub">or tap to choose · JPG, PNG, HEIC</div>
-        </div>
-        <input type="file" id="file" accept="image/*" class="sr" />
-        <label class="sample-label">Or start with a sample</label>
-        <div class="sample-row" id="sampleRow"></div>
+      <div class="panel" id="campaignPanel">
+        <h2>Campaign</h2>
+        <p class="campaign-blurb">Complete a level to unlock the next. Peeking or using the guide caps a level at 2 stars.</p>
+        <div class="levels-grid" id="levelCards"></div>
       </div>
 
-      <div class="panel">
-        <h2>2 · Difficulty</h2>
-        <div class="field">
-          <label for="difficulty">How many pieces?</label>
-          <select id="difficulty"></select>
-        </div>
-        <div class="field custom-wrap" id="customWrap" hidden>
-          <label>Custom grid</label>
-          <div class="custom-grid">
-            <input type="number" id="colsInput" min="2" max="12" value="5" aria-label="Columns" />
-            <span class="times">×</span>
-            <input type="number" id="rowsInput" min="2" max="12" value="4" aria-label="Rows" />
-            <span class="cx-label">cols × rows</span>
+      <div id="freePanel" hidden>
+        <div class="panel">
+          <h2>1 · Your photo</h2>
+          <div class="drop" id="drop" role="button" tabindex="0" aria-label="Upload a photo">
+            <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#2fe4ea" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v13"/>
+            </svg>
+            <div class="big">Drop a photo here</div>
+            <div class="sub">or tap to choose · JPG, PNG, HEIC</div>
           </div>
-          <p class="custom-note" id="customNote"></p>
+          <input type="file" id="file" accept="image/*" class="sr" />
+          <label class="sample-label">Or start with a sample</label>
+          <div class="sample-row" id="sampleRow"></div>
         </div>
-        <label class="switch" for="rotateToggle">
-          <input type="checkbox" id="rotateToggle" />
-          <span class="track"><span class="thumb"></span></span>
-          <span class="switch-label">Rotate pieces <em>(harder)</em></span>
-        </label>
-        <div class="btn-row">
-          <button class="btn primary" id="makeBtn">Make puzzle</button>
-          <button class="btn" id="shuffleBtn">Shuffle</button>
-        </div>
-      </div>
 
-      <div class="panel">
-        <h2>3 · Keep it</h2>
-        <div class="btn-row">
-          <button class="btn" id="printBtn">Print to cut</button>
-          <button class="btn" id="saveBtn">Save image</button>
+        <div class="panel">
+          <h2>2 · Difficulty</h2>
+          <div class="field">
+            <label for="difficulty">How many pieces?</label>
+            <select id="difficulty"></select>
+          </div>
+          <div class="field custom-wrap" id="customWrap" hidden>
+            <label>Custom grid</label>
+            <div class="custom-grid">
+              <input type="number" id="colsInput" min="2" max="12" value="5" aria-label="Columns" />
+              <span class="times">×</span>
+              <input type="number" id="rowsInput" min="2" max="12" value="4" aria-label="Rows" />
+              <span class="cx-label">cols × rows</span>
+            </div>
+            <p class="custom-note" id="customNote"></p>
+          </div>
+          <label class="switch" for="rotateToggle">
+            <input type="checkbox" id="rotateToggle" />
+            <span class="track"><span class="thumb"></span></span>
+            <span class="switch-label">Rotate pieces <em>(harder)</em></span>
+          </label>
+          <div class="btn-row">
+            <button class="btn primary" id="makeBtn">Make puzzle</button>
+            <button class="btn" id="shuffleBtn">Shuffle</button>
+          </div>
         </div>
-        <p class="sub" style="color:var(--muted);font-size:13px;margin:12px 0 0">
-          <strong>Print to cut</strong> lays the picture over the puzzle lines. Print it, glue to card, and cut along the lines for a real jigsaw.
-        </p>
+
+        <div class="panel">
+          <h2>3 · Keep it</h2>
+          <div class="btn-row">
+            <button class="btn" id="printBtn">Print to cut</button>
+            <button class="btn" id="saveBtn">Save image</button>
+          </div>
+          <p class="sub" style="color:var(--muted);font-size:13px;margin:12px 0 0">
+            <strong>Print to cut</strong> lays the picture over the puzzle lines. Print it, glue to card, and cut along the lines for a real jigsaw.
+          </p>
+        </div>
       </div>
     </div>
 
@@ -308,9 +392,12 @@
     <div class="stage-wrap">
       <div class="stage">
         <div class="hud">
+          <span class="chip" id="levelNameChip" hidden></span>
           <span class="chip"><span class="n" id="placedN">0</span>/<span id="totalN">0</span> placed</span>
+          <span class="chip">↔ <span id="movesN">0</span> moves</span>
           <span class="chip">⏱ <span id="timer">0:00</span></span>
           <span class="spacer"></span>
+          <button class="iconbtn" id="muteBtn" title="Toggle sound">🔊</button>
           <button class="iconbtn" id="peekBtn" title="Hold to see the finished picture">👁 Peek</button>
           <button class="iconbtn" id="hintBtn" title="Show a faint guide where pieces go">💡 Guide</button>
           <button class="iconbtn" id="straightenBtn" title="Turn every loose piece upright" hidden>↻ Straighten all</button>
@@ -320,14 +407,21 @@
           <canvas id="fx"></canvas>
           <div class="win" id="win">
             <div class="card">
-              <h3>Solved! 🧩</h3>
+              <h3 id="winTitle">Solved! 🧩</h3>
               <p id="winText">Nice work.</p>
-              <button class="btn primary" id="againBtn" style="width:auto;padding:10px 22px">Shuffle again</button>
+              <div class="stars-row" id="winStars" hidden>
+                <span class="star">★</span><span class="star">★</span><span class="star">★</span>
+              </div>
+              <div class="win-btns">
+                <button class="btn primary" id="nextLevelBtn" hidden>Next level →</button>
+                <button class="btn" id="againBtn">Shuffle again</button>
+                <button class="btn ghost" id="levelSelectBtn" hidden>Level select</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <p class="stage-hint" id="stageHint">Drag a piece near its spot and it snaps into place. Corners and edges are the easy way in.</p>
+      <p class="stage-hint" id="stageHint">Drag pieces near each other to click them together, or drop near the frame to lock a piece into place.</p>
     </div>
   </div>
 
@@ -337,6 +431,18 @@
 <div id="printArea">
   <img id="printImg" alt="Puzzle to print and cut" />
   <div class="pcaption">Print · glue to card · cut along the lines. Made with Piecework.</div>
+</div>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="modal-overlay" id="achModal">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>Achievements</h3>
+      <button class="modal-close" id="achClose">✕</button>
+    </div>
+    <div id="achList"></div>
+  </div>
 </div>
 
 <script>
@@ -353,13 +459,20 @@
   const difficultySel = document.getElementById('difficulty');
   const placedNEl = document.getElementById('placedN');
   const totalNEl = document.getElementById('totalN');
+  const movesNEl = document.getElementById('movesN');
   const timerEl = document.getElementById('timer');
   const winEl = document.getElementById('win');
+  const winTitle = document.getElementById('winTitle');
   const winText = document.getElementById('winText');
+  const winStarsEl = document.getElementById('winStars');
+  const nextLevelBtn = document.getElementById('nextLevelBtn');
+  const againBtn = document.getElementById('againBtn');
+  const levelSelectBtn = document.getElementById('levelSelectBtn');
+  const levelNameChip = document.getElementById('levelNameChip');
 
   const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
 
-  // ---------- Difficulty options ----------
+  // ---------- Difficulty options (Free Play) ----------
   const OPTIONS = [
     { label: 'Warm-up · 6 pieces',  c: 3, r: 2 },
     { label: 'Easy · 12 pieces',    c: 4, r: 3 },
@@ -386,6 +499,7 @@
   const straightenBtn = document.getElementById('straightenBtn');
   const customNote = document.getElementById('customNote');
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  const rnd = (a, b) => a + Math.random() * (b - a);
 
   // ---------- State ----------
   const state = {
@@ -394,20 +508,114 @@
     boardW: 0, boardH: 0,
     originX: 0, originY: 0,
     aw: 0, ah: 0,          // assembly size
+    pw: 0, ph: 0,          // single piece cell size
     rows: 0, cols: 0,
     pieces: [],
+    pieceGrid: [],
     placed: 0,
     total: 0,
+    moves: 0,
     // interaction
     drag: null,
     // timer
     started: false, t0: 0, tint: null,
     showGuide: false, peek: false,
+    peekUsed: false, hintUsed: false,
     rotateOn: false,
     hitCanvas: document.createElement('canvas'),
     edgeParams: null,      // stored to rebuild for print
+    // game layer
+    mode: 'campaign',      // 'campaign' | 'free'
+    currentLevel: null,
   };
   const hitCtx = state.hitCanvas.getContext('2d');
+
+  // ================================================================
+  //  GAME LAYER — save data, achievements, sound
+  // ================================================================
+  const SAVE_KEY = 'piecework.save.v2';
+  function loadSave() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (raw) return Object.assign({ levels: {}, achievements: [], settings: { sound: true }, lastLevel: null }, JSON.parse(raw));
+    } catch (_) {}
+    return { levels: {}, achievements: [], settings: { sound: true }, lastLevel: null };
+  }
+  const save = loadSave();
+  function persistSave() { try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch (_) {} }
+
+  const ACHIEVEMENTS = {
+    first_piece: { name: 'First Piece',       desc: 'Snap your first puzzle piece into place.' },
+    connector:   { name: 'Click!',             desc: 'Connect two loose pieces together for the first time.' },
+    first_solve: { name: 'Piece of Cake',      desc: 'Complete your first puzzle.' },
+    no_assist:   { name: 'Purist',             desc: 'Complete a campaign level without peeking or the guide.' },
+    three_star:  { name: 'Perfectionist',      desc: 'Earn all 3 stars on a level.' },
+    rotator:     { name: 'Spatial Reasoning',  desc: 'Complete a level with rotation enabled.' },
+    halfway:     { name: 'Halfway There',      desc: 'Unlock the 6th campaign level.' },
+    champion:    { name: 'Puzzle Champion',    desc: 'Complete every level in the campaign.' },
+  };
+
+  function updateAchCount() {
+    const el = document.getElementById('achCount');
+    if (el) el.textContent = `${save.achievements.length}/${Object.keys(ACHIEVEMENTS).length}`;
+  }
+  function unlockAchievement(id) {
+    if (!ACHIEVEMENTS[id] || save.achievements.includes(id)) return;
+    save.achievements.push(id); persistSave();
+    showToast(`🏆 ${ACHIEVEMENTS[id].name}`, ACHIEVEMENTS[id].desc);
+    updateAchCount();
+  }
+  function showToast(title, desc) {
+    const wrap = document.getElementById('toastWrap');
+    const t = document.createElement('div'); t.className = 'toast';
+    t.innerHTML = `<strong></strong><span></span>`;
+    t.querySelector('strong').textContent = title;
+    t.querySelector('span').textContent = desc;
+    wrap.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 300); }, 3600);
+  }
+  function renderAchievements() {
+    const list = document.getElementById('achList');
+    list.innerHTML = '';
+    Object.entries(ACHIEVEMENTS).forEach(([id, a]) => {
+      const got = save.achievements.includes(id);
+      const row = document.createElement('div');
+      row.className = 'ach-item' + (got ? '' : ' locked');
+      row.innerHTML = `<span class="ico">${got ? '🏆' : '🔒'}</span><div><strong></strong><div class="desc"></div></div>`;
+      row.querySelector('strong').textContent = a.name;
+      row.querySelector('.desc').textContent = a.desc;
+      list.appendChild(row);
+    });
+    updateAchCount();
+  }
+
+  // ---------- Sound (synthesized, no assets) ----------
+  let actx = null;
+  function ensureAudio() {
+    if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (_) {} }
+    return actx;
+  }
+  function beep(freq, dur, type, vol, delay) {
+    if (!save.settings.sound) return;
+    const ctx = ensureAudio(); if (!ctx) return;
+    const t0 = ctx.currentTime + (delay || 0);
+    const osc = ctx.createOscillator(); const gain = ctx.createGain();
+    osc.type = type || 'sine'; osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0, t0);
+    gain.gain.linearRampToValueAtTime(vol || 0.18, t0 + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(t0); osc.stop(t0 + dur + 0.02);
+  }
+  function playSound(name) {
+    if (name === 'connect') beep(720, 0.09, 'triangle', 0.16);
+    else if (name === 'place') { beep(520, 0.08, 'sine', 0.18); beep(780, 0.10, 'sine', 0.14, 0.05); }
+    else if (name === 'win') { [523, 659, 784, 1046].forEach((f, i) => beep(f, 0.18, 'triangle', 0.16, i * 0.09)); }
+  }
+  const muteBtn = document.getElementById('muteBtn');
+  function updateMuteBtn() { muteBtn.textContent = save.settings.sound ? '🔊' : '🔇'; muteBtn.classList.toggle('on', save.settings.sound); }
+  muteBtn.addEventListener('click', () => { save.settings.sound = !save.settings.sound; persistSave(); updateMuteBtn(); });
 
   // ---------- Cubic sampling of a jigsaw edge ----------
   function edgePoints(A, B, params) {
@@ -442,9 +650,7 @@
     return pts;
   }
 
-  const rnd = (a, b) => a + Math.random() * (b - a);
   function makeEdgeParams(rows, cols) {
-    // hParams[r][c] for interior horizontal edges (r 1..rows-1), vParams[r][c] interior vertical (c 1..cols-1)
     const hP = [], vP = [];
     for (let r = 0; r <= rows; r++) {
       hP[r] = [];
@@ -463,7 +669,6 @@
     return { hP, vP };
   }
 
-  // Build canonical shared edges in a given coordinate space (assembly px), for size aw x ah.
   function buildEdges(rows, cols, aw, ah, params) {
     const pw = aw / cols, ph = ah / rows;
     const node = (c, r) => ({ x: c * pw, y: r * ph });
@@ -495,34 +700,22 @@
   }
 
   // ---------- Build puzzle ----------
-  function buildPuzzle() {
-    let cols, rows;
-    const iw = state.img.width, ih = state.img.height;
-    if (difficultySel.value === 'custom') {
-      cols = clamp(parseInt(colsInput.value, 10) || 5, 2, 12);
-      rows = clamp(parseInt(rowsInput.value, 10) || 4, 2, 12);
-      colsInput.value = cols; rowsInput.value = rows;
-    } else {
-      const opt = OPTIONS[+difficultySel.value];
-      cols = opt.c; rows = opt.r;
-      if (iw / ih < 1) { const t = cols; cols = rows; rows = t; } // portrait: flip preset grid
-    }
+  function startPuzzle(img, cols, rows) {
+    state.img = img;
+    const iw = img.width, ih = img.height;
 
-    // Assembly size (play resolution) — fit within a comfortable box
     const maxAW = 560, maxAH = 460;
     let scale = Math.min(maxAW / iw, maxAH / ih);
     scale = Math.min(scale, 1.6);
     const aw = Math.round(iw * scale), ah = Math.round(ih * scale);
 
-    // pre-render the picture at assembly size
     const assembly = document.createElement('canvas');
     assembly.width = aw; assembly.height = ah;
-    assembly.getContext('2d').drawImage(state.img, 0, 0, aw, ah);
+    assembly.getContext('2d').drawImage(img, 0, 0, aw, ah);
 
     const pw = aw / cols, ph = ah / rows;
     const pad = Math.ceil(Math.max(pw, ph) * 0.30) + 3;
 
-    // board dimensions with scatter room
     const marginX = Math.max(150, pw * 1.25);
     const marginY = Math.max(120, ph * 1.15);
     const boardW = Math.round(aw + marginX * 2);
@@ -550,7 +743,6 @@
         for (let i = 1; i < pts.length; i++) path.lineTo(pts[i].x, pts[i].y);
         path.closePath();
 
-        // render piece canvas
         const pc = document.createElement('canvas');
         pc.width = cw * DPR; pc.height = ch * DPR;
         const pctx = pc.getContext('2d');
@@ -560,33 +752,38 @@
         pctx.clip(path);
         pctx.drawImage(assembly, 0, 0);
         pctx.restore();
-        // cardboard edge: soft inner highlight + crisp outline
         pctx.lineJoin = 'round';
         pctx.strokeStyle = 'rgba(255,255,255,.35)';
         pctx.lineWidth = 2.4; pctx.stroke(path);
         pctx.strokeStyle = 'rgba(40,32,22,.55)';
         pctx.lineWidth = 1.1; pctx.stroke(path);
 
-        pieces.push({
+        const piece = {
           r, c, path, canvas: pc,
           cw, ch, bx0, by0,
           homeX: originX + bx0, homeY: originY + by0,
           drawX: 0, drawY: 0, rot: 0,
-          placed: false,
-        });
+          placed: false, locked: false,
+        };
+        piece.group = [piece];
+        pieces.push(piece);
       }
     }
 
+    const pieceGrid = [];
+    for (let r = 0; r < rows; r++) pieceGrid[r] = [];
+    for (const p of pieces) pieceGrid[p.r][p.c] = p;
+
     Object.assign(state, {
-      assembly, aw, ah, rows, cols, boardW, boardH, originX, originY,
-      pieces, total: rows * cols, placed: 0, edgeParams: params,
+      assembly, aw, ah, pw, ph, rows, cols, boardW, boardH, originX, originY,
+      pieces, pieceGrid, total: rows * cols, placed: 0, edgeParams: params,
+      moves: 0, peekUsed: false, hintUsed: false,
     });
 
-    // canvas backing store
     board.width = boardW * DPR; board.height = boardH * DPR;
     board.style.aspectRatio = `${boardW} / ${boardH}`;
     fx.width = boardW * DPR; fx.height = boardH * DPR;
-    state.hitCanvas.width = 4; state.hitCanvas.height = 4; // isPointInPath needs a context only
+    state.hitCanvas.width = 4; state.hitCanvas.height = 4;
 
     scatter();
     totalNEl.textContent = state.total;
@@ -595,23 +792,45 @@
     render();
   }
 
+  function buildPuzzleFromControls() {
+    let cols, rows;
+    const img = state.img || SAMPLES[0].canvas;
+    const iw = img.width, ih = img.height;
+    if (difficultySel.value === 'custom') {
+      cols = clamp(parseInt(colsInput.value, 10) || 5, 2, 12);
+      rows = clamp(parseInt(rowsInput.value, 10) || 4, 2, 12);
+      colsInput.value = cols; rowsInput.value = rows;
+    } else {
+      const opt = OPTIONS[+difficultySel.value];
+      cols = opt.c; rows = opt.r;
+      if (iw / ih < 1) { const t = cols; cols = rows; rows = t; }
+    }
+    state.mode = 'free';
+    state.currentLevel = null;
+    state.rotateOn = rotateToggle.checked;
+    straightenBtn.hidden = !state.rotateOn;
+    updateHint();
+    startPuzzle(img, cols, rows);
+  }
+
   function scatter() {
     const { pieces, boardW, boardH } = state;
-    // shuffle draw order
     for (const p of pieces) {
       p.placed = false;
+      p.locked = false;
+      p.group = [p];
       p.rot = state.rotateOn ? ((Math.random() * 4) | 0) : 0;
       const maxX = boardW - p.cw - 6, maxY = boardH - p.ch - 6;
       p.drawX = Math.round(rnd(6, Math.max(7, maxX)));
       p.drawY = Math.round(rnd(6, Math.max(7, maxY)));
     }
-    // fisher-yates for z-order variety
     for (let i = pieces.length - 1; i > 0; i--) {
       const j = (Math.random() * (i + 1)) | 0;
       [pieces[i], pieces[j]] = [pieces[j], pieces[i]];
     }
-    state.placed = 0;
+    state.placed = 0; state.moves = 0; state.peekUsed = false; state.hintUsed = false;
     placedNEl.textContent = 0;
+    movesNEl.textContent = 0;
     resetTimer();
     hideWin();
     render();
@@ -623,12 +842,10 @@
     bctx.setTransform(DPR, 0, 0, DPR, 0, 0);
     bctx.clearRect(0, 0, boardW, boardH);
 
-    // dark play-mat background
     const g = bctx.createLinearGradient(0, 0, boardW, boardH);
     g.addColorStop(0, '#16123a'); g.addColorStop(1, '#0c0a20');
     bctx.fillStyle = g;
     bctx.fillRect(0, 0, boardW, boardH);
-    // faint neon speckle
     bctx.globalAlpha = 0.06;
     for (let i = 0; i < 120; i++) {
       bctx.fillStyle = i % 2 ? '#2fe4ea' : '#8b6dff';
@@ -636,7 +853,6 @@
     }
     bctx.globalAlpha = 1;
 
-    // assembly frame ("build here")
     bctx.save();
     bctx.translate(originX, originY);
     if (state.peek && state.assembly) {
@@ -651,7 +867,6 @@
     bctx.setLineDash([]); bctx.shadowBlur = 0;
     bctx.restore();
 
-    // pieces (array order = z-order; placed pushed to front so they sit under)
     for (const p of pieces) {
       bctx.save();
       if (!p.placed) {
@@ -670,7 +885,7 @@
   }
 
   // ---------- Hit testing ----------
-  function rotInv(x, y, k) { // inverse of k*90deg on-screen rotation: (x,y)->(y,-x) per step
+  function rotInv(x, y, k) {
     for (let i = 0; i < k; i++) { const nx = y, ny = -x; x = nx; y = ny; }
     return [x, y];
   }
@@ -697,6 +912,91 @@
     return { x: (cx - rect.left) * sx, y: (cy - rect.top) * sy };
   }
 
+  // ---------- Piece-to-piece connecting (groups) ----------
+  const DIRS = ['up', 'down', 'left', 'right'];
+  function neighborOf(p, dir) {
+    const gr = state.pieceGrid;
+    if (dir === 'up')    return p.r > 0 ? gr[p.r - 1][p.c] : null;
+    if (dir === 'down')  return p.r < state.rows - 1 ? gr[p.r + 1][p.c] : null;
+    if (dir === 'left')  return p.c > 0 ? gr[p.r][p.c - 1] : null;
+    if (dir === 'right') return p.c < state.cols - 1 ? gr[p.r][p.c + 1] : null;
+  }
+  function pieceCenter(p) { return { x: p.drawX + p.cw / 2, y: p.drawY + p.ch / 2 }; }
+  function pieceHomeCenter(p) { return { x: p.homeX + p.cw / 2, y: p.homeY + p.ch / 2 }; }
+  function rotateVec(x, y, steps) {
+    steps = ((steps % 4) + 4) % 4;
+    for (let i = 0; i < steps; i++) { const nx = -y, ny = x; x = nx; y = ny; }
+    return { x, y };
+  }
+  function rotateGroup(group, pivot, steps) {
+    const a = steps * Math.PI / 2;
+    const cosA = Math.cos(a), sinA = Math.sin(a);
+    for (const p of group) {
+      const c = pieceCenter(p);
+      const nx = pivot.x + (c.x - pivot.x) * cosA - (c.y - pivot.y) * sinA;
+      const ny = pivot.y + (c.x - pivot.x) * sinA + (c.y - pivot.y) * cosA;
+      p.drawX = nx - p.cw / 2;
+      p.drawY = ny - p.ch / 2;
+      p.rot = (p.rot + steps + 4) % 4;
+    }
+  }
+  function mergeThreshold() { return Math.max(14, Math.min(state.pw, state.ph) * 0.30); }
+  function homeSnapThreshold() { return Math.max(16, Math.min(state.pw, state.ph) * 0.34); }
+
+  function tryConnectAndSnap(startGroup) {
+    let group = startGroup;
+    let mergedAny = false;
+    let changed = true;
+    while (changed) {
+      changed = false;
+      scan:
+      for (const p of group) {
+        if (p.locked) continue;
+        for (const dir of DIRS) {
+          const n = neighborOf(p, dir);
+          if (!n || n.locked || n.group === p.group || n.rot !== p.rot) continue;
+          const hp = pieceHomeCenter(p), hn = pieceHomeCenter(n);
+          const expected = rotateVec(hn.x - hp.x, hn.y - hp.y, p.rot);
+          const cp = pieceCenter(p), cn = pieceCenter(n);
+          const actual = { x: cn.x - cp.x, y: cn.y - cp.y };
+          const dist = Math.hypot(actual.x - expected.x, actual.y - expected.y);
+          if (dist < mergeThreshold()) {
+            const dx = expected.x - actual.x, dy = expected.y - actual.y;
+            for (const m of n.group) { m.drawX += dx; m.drawY += dy; }
+            const merged = p.group.concat(n.group);
+            for (const m of merged) m.group = merged;
+            group = merged;
+            changed = true; mergedAny = true;
+            break scan;
+          }
+        }
+      }
+    }
+    if (mergedAny) { unlockAchievement('connector'); playSound('connect'); }
+    checkHomeSnap(group);
+  }
+
+  function checkHomeSnap(group) {
+    if (group.some(p => p.locked)) return;
+    if (group[0].rot !== 0) return;
+    const anchor = group[0];
+    const desired = pieceHomeCenter(anchor);
+    const actual = pieceCenter(anchor);
+    const dist = Math.hypot(actual.x - desired.x, actual.y - desired.y);
+    if (dist < homeSnapThreshold()) {
+      const dx = desired.x - actual.x, dy = desired.y - actual.y;
+      for (const p of group) { p.drawX += dx; p.drawY += dy; p.placed = true; p.locked = true; }
+      for (const p of group) { const i = state.pieces.indexOf(p); if (i >= 0) state.pieces.splice(i, 1); }
+      state.pieces.unshift(...group);
+      state.placed += group.length;
+      placedNEl.textContent = state.placed;
+      unlockAchievement('first_piece');
+      playSound('place');
+      if (state.placed === state.total) doWin();
+    }
+  }
+
+  // ---------- Drag interaction ----------
   board.addEventListener('pointerdown', (e) => {
     if (!state.pieces.length) return;
     const pt = toBoard(e);
@@ -704,10 +1004,15 @@
     if (!hit) return;
     board.setPointerCapture(e.pointerId);
     board.classList.add('dragging');
-    // bring to top
+    const group = hit.p.group;
     const { pieces } = state;
-    pieces.splice(hit.idx, 1); pieces.push(hit.p);
-    state.drag = { p: hit.p, ox: pt.x - hit.p.drawX, oy: pt.y - hit.p.drawY, sx: pt.x, sy: pt.y, moved: false };
+    for (const m of group) { const i = pieces.indexOf(m); if (i >= 0) pieces.splice(i, 1); }
+    pieces.push(...group);
+    state.drag = {
+      group, anchor: hit.p,
+      offsets: group.map(m => ({ m, ox: pt.x - m.drawX, oy: pt.y - m.drawY })),
+      sx: pt.x, sy: pt.y, moved: false,
+    };
     startTimer();
     render();
   });
@@ -716,33 +1021,23 @@
     if (!state.drag) return;
     const pt = toBoard(e);
     if (!state.drag.moved && Math.hypot(pt.x - state.drag.sx, pt.y - state.drag.sy) > 5) state.drag.moved = true;
-    state.drag.p.drawX = pt.x - state.drag.ox;
-    state.drag.p.drawY = pt.y - state.drag.oy;
+    for (const o of state.drag.offsets) { o.m.drawX = pt.x - o.ox; o.m.drawY = pt.y - o.oy; }
     render();
   });
 
   function endDrag(e) {
     if (!state.drag) return;
-    const p = state.drag.p;
-    const moved = state.drag.moved;
+    const { group, anchor, moved } = state.drag;
     board.classList.remove('dragging');
     try { board.releasePointerCapture(e.pointerId); } catch (_) {}
 
     if (!moved && state.rotateOn) {
-      // a tap rotates the piece a quarter turn
-      p.rot = (p.rot + 1) % 4;
-    } else {
-      const snap = Math.max(16, Math.min(state.aw / state.cols, state.ah / state.rows) * 0.34);
-      const near = Math.hypot(p.drawX - p.homeX, p.drawY - p.homeY) < snap;
-      if (near && p.rot === 0) {
-        p.drawX = p.homeX; p.drawY = p.homeY; p.placed = true;
-        const { pieces } = state;
-        const i = pieces.indexOf(p);
-        pieces.splice(i, 1); pieces.unshift(p); // placed pieces sit under loose ones
-        state.placed++;
-        placedNEl.textContent = state.placed;
-        if (state.placed === state.total) doWin();
-      }
+      rotateGroup(group, pieceCenter(anchor), 1);
+      tryConnectAndSnap(group);
+    } else if (moved) {
+      state.moves++;
+      movesNEl.textContent = state.moves;
+      tryConnectAndSnap(group);
     }
     state.drag = null;
     render();
@@ -767,12 +1062,61 @@
   function stopTimer() { clearInterval(state.tint); state.started = false; }
 
   // ---------- Win ----------
+  function setWinStars(n) {
+    const stars = winStarsEl.querySelectorAll('.star');
+    stars.forEach((s, i) => s.classList.toggle('filled', i < n));
+  }
+
   function doWin() {
     stopTimer();
-    const elapsed = fmt(Date.now() - state.t0);
-    winText.textContent = `${state.total} pieces in ${elapsed}. Nicely done.`;
-    winEl.classList.add('show');
+    const elapsedMs = Date.now() - state.t0;
+    const elapsed = fmt(elapsedMs);
+    unlockAchievement('first_solve');
+    playSound('win');
     confetti();
+
+    if (state.mode === 'campaign' && state.currentLevel) {
+      const level = state.currentLevel;
+      const assisted = state.peekUsed || state.hintUsed;
+      let stars = (elapsedMs / 1000) <= level.par3 ? 3 : (elapsedMs / 1000) <= level.par2 ? 2 : 1;
+      if (assisted && stars > 2) stars = 2;
+
+      const prev = save.levels[level.id];
+      save.levels[level.id] = {
+        stars: Math.max(stars, prev ? prev.stars : 0),
+        bestTimeMs: Math.min(elapsedMs, prev ? prev.bestTimeMs : Infinity),
+        bestMoves: Math.min(state.moves, prev ? prev.bestMoves : Infinity),
+      };
+      save.lastLevel = level.id;
+      persistSave();
+
+      if (!assisted) unlockAchievement('no_assist');
+      if (stars === 3) unlockAchievement('three_star');
+      if (level.rotate) unlockAchievement('rotator');
+      const idx = LEVELS.findIndex(l => l.id === level.id);
+      if (idx === 5) unlockAchievement('halfway');
+      if (LEVELS.every(l => save.levels[l.id] && save.levels[l.id].stars >= 1)) unlockAchievement('champion');
+
+      winTitle.textContent = 'Level complete! 🧩';
+      winText.textContent = `${level.name} · ${level.cols * level.rows} pieces in ${elapsed} · ${state.moves} moves`;
+      winStarsEl.hidden = false;
+      setWinStars(stars);
+      const next = LEVELS[idx + 1];
+      nextLevelBtn.hidden = !next;
+      nextLevelBtn.onclick = () => { if (next) { hideWin(); startCampaignLevel(next); } };
+      levelSelectBtn.hidden = false;
+      againBtn.textContent = 'Replay level';
+      renderLevelCards();
+      updateProfileBar();
+    } else {
+      winTitle.textContent = 'Solved! 🧩';
+      winText.textContent = `${state.total} pieces in ${elapsed} · ${state.moves} moves`;
+      winStarsEl.hidden = true;
+      nextLevelBtn.hidden = true;
+      levelSelectBtn.hidden = true;
+      againBtn.textContent = 'Shuffle again';
+    }
+    winEl.classList.add('show');
   }
   function hideWin() { winEl.classList.remove('show'); }
 
@@ -806,40 +1150,38 @@
     })();
   }
 
-  // ---------- Image loading ----------
+  // ---------- Image loading (Free Play) ----------
   function loadFromFile(file) {
     if (!file || !file.type.startsWith('image/')) return;
     const url = URL.createObjectURL(file);
     const img = new Image();
-    img.onload = () => { state.img = img; URL.revokeObjectURL(url); buildPuzzle(); };
+    img.onload = () => { state.img = img; URL.revokeObjectURL(url); buildPuzzleFromControls(); };
     img.onerror = () => { alert("That image couldn't be read. Try a JPG or PNG."); URL.revokeObjectURL(url); };
     img.src = url;
   }
 
-  // Friendly generated samples so the page works instantly
+  // ---------- Friendly generated art (samples + campaign scenes) ----------
+  function sampleCanvas() { const cv = document.createElement('canvas'); cv.width = 720; cv.height = 540; return cv; }
+
   function makeSampleMeadow() {
     const w = 720, h = 540, cv = document.createElement('canvas');
     cv.width = w; cv.height = h; const x = cv.getContext('2d');
     const sky = x.createLinearGradient(0, 0, 0, h);
     sky.addColorStop(0, '#8fd0e6'); sky.addColorStop(0.55, '#cfeaf0'); sky.addColorStop(1, '#f6ead0');
     x.fillStyle = sky; x.fillRect(0, 0, w, h);
-    // sun
     x.fillStyle = '#ffd766';
     x.beginPath(); x.arc(w * 0.76, h * 0.26, 52, 0, 7); x.fill();
     x.globalAlpha = .35; x.beginPath(); x.arc(w * 0.76, h * 0.26, 74, 0, 7); x.fill(); x.globalAlpha = 1;
-    // hills
     const hill = (cy, col) => { x.fillStyle = col; x.beginPath(); x.moveTo(0, h);
       for (let i = 0; i <= w; i += 12) x.lineTo(i, cy + Math.sin(i / 90) * 34 + Math.cos(i / 40) * 10);
       x.lineTo(w, h); x.closePath(); x.fill(); };
     hill(h * 0.62, '#7bbf7a'); hill(h * 0.72, '#5fa968'); hill(h * 0.83, '#3f8a55');
-    // little trees
     for (let i = 0; i < 9; i++) {
       const tx = 60 + i * 74, ty = h * 0.8 + Math.sin(i) * 8;
       x.fillStyle = '#6b4a2b'; x.fillRect(tx - 3, ty, 6, 22);
       x.fillStyle = i % 2 ? '#2f7a45' : '#357f4a';
       x.beginPath(); x.moveTo(tx, ty - 34); x.lineTo(tx - 16, ty + 4); x.lineTo(tx + 16, ty + 4); x.closePath(); x.fill();
     }
-    // birds
     x.strokeStyle = '#33413e'; x.lineWidth = 2;
     for (let i = 0; i < 4; i++) { const bx = 130 + i * 60, by = 90 + (i % 2) * 20;
       x.beginPath(); x.moveTo(bx, by); x.quadraticCurveTo(bx + 9, by - 8, bx + 18, by);
@@ -847,28 +1189,22 @@
     return cv;
   }
 
-  function sampleCanvas() { const cv = document.createElement('canvas'); cv.width = 720; cv.height = 540; return cv; }
-
   function makeSampleSunset() {
     const w = 720, h = 540, cv = sampleCanvas(), x = cv.getContext('2d');
     const horizon = h * 0.62;
     const sky = x.createLinearGradient(0, 0, 0, horizon);
     sky.addColorStop(0, '#3b2a63'); sky.addColorStop(0.5, '#c25a4e'); sky.addColorStop(1, '#f4a45c');
     x.fillStyle = sky; x.fillRect(0, 0, w, horizon);
-    // sun
     const sunX = w * 0.5, sunY = h * 0.5;
     x.globalAlpha = 0.3; x.fillStyle = '#ffd07a'; x.beginPath(); x.arc(sunX, sunY, 92, 0, 7); x.fill();
     x.globalAlpha = 1; x.beginPath(); x.arc(sunX, sunY, 60, 0, 7); x.fill();
-    // mountain ridge
     x.fillStyle = '#2e1f45'; x.beginPath(); x.moveTo(0, horizon);
     const ridge = [[0, 0.62], [0.12, 0.50], [0.22, 0.57], [0.35, 0.46], [0.5, 0.55], [0.63, 0.47], [0.78, 0.56], [0.9, 0.5], [1, 0.58], [1, 0.62]];
     for (const [px, py] of ridge) x.lineTo(px * w, py * h);
     x.closePath(); x.fill();
-    // water
     const wat = x.createLinearGradient(0, horizon, 0, h);
     wat.addColorStop(0, '#e08a4e'); wat.addColorStop(0.5, '#9b4f77'); wat.addColorStop(1, '#3f2b63');
     x.fillStyle = wat; x.fillRect(0, horizon, w, h - horizon);
-    // shimmering reflection
     x.fillStyle = 'rgba(255,208,122,.5)';
     for (let i = 0; i < 10; i++) { const yy = horizon + 6 + i * 8, ww = 74 - i * 5; if (ww > 0) x.fillRect(sunX - ww / 2, yy, ww, 3); }
     return cv;
@@ -901,12 +1237,165 @@
     return cv;
   }
 
+  function makeSceneOcean() {
+    const w = 720, h = 540, cv = sampleCanvas(), x = cv.getContext('2d');
+    const horizon = h * 0.42;
+    const sky = x.createLinearGradient(0, 0, 0, horizon);
+    sky.addColorStop(0, '#bfe3f6'); sky.addColorStop(1, '#eaf7f2');
+    x.fillStyle = sky; x.fillRect(0, 0, w, horizon);
+    x.fillStyle = '#fff';
+    [[120, 70, 30], [600, 50, 26], [420, 100, 20]].forEach(([cx, cy, r]) => {
+      [[0, 0, r], [r * 0.8, r * 0.15, r * 0.7], [-r * 0.8, r * 0.15, r * 0.7]].forEach(([dx, dy, rr]) => {
+        x.beginPath(); x.arc(cx + dx, cy + dy, rr, 0, 7); x.fill();
+      });
+    });
+    const sea = x.createLinearGradient(0, horizon, 0, h);
+    sea.addColorStop(0, '#1f8fae'); sea.addColorStop(1, '#0b3f57');
+    x.fillStyle = sea; x.fillRect(0, horizon, w, h - horizon);
+    x.strokeStyle = 'rgba(255,255,255,.35)'; x.lineWidth = 2;
+    for (let i = 0; i < 12; i++) {
+      const y = horizon + 16 + i * (h - horizon - 16) / 12;
+      x.beginPath();
+      for (let px = 0; px <= w; px += 20) x.lineTo(px, y + Math.sin(px / 24 + i) * 3);
+      x.stroke();
+    }
+    x.fillStyle = '#2c2036'; x.fillRect(340, horizon - 2, 4, 46);
+    x.beginPath(); x.moveTo(344, horizon - 2); x.lineTo(344, horizon - 40); x.lineTo(372, horizon - 2); x.closePath(); x.fillStyle = '#fff'; x.fill();
+    x.fillStyle = '#c94f4f'; x.beginPath(); x.moveTo(320, horizon + 4); x.lineTo(370, horizon + 4); x.lineTo(344, horizon + 22); x.closePath(); x.fill();
+    return cv;
+  }
+
+  function makeSceneMountains() {
+    const w = 720, h = 540, cv = sampleCanvas(), x = cv.getContext('2d');
+    const sky = x.createLinearGradient(0, 0, 0, h * 0.7);
+    sky.addColorStop(0, '#7fb8e0'); sky.addColorStop(1, '#dff0f6');
+    x.fillStyle = sky; x.fillRect(0, 0, w, h);
+    const ridge = (base, amp, col, offset) => {
+      x.fillStyle = col; x.beginPath(); x.moveTo(0, h);
+      for (let px = 0; px <= w; px += 10) x.lineTo(px, base - Math.abs(Math.sin(px / 140 + offset)) * amp - Math.abs(Math.cos(px / 70 + offset)) * amp * 0.4);
+      x.lineTo(w, h); x.closePath(); x.fill();
+    };
+    ridge(h * 0.62, 90, '#7c93b0', 0.4);
+    ridge(h * 0.72, 120, '#4f6488', 1.4);
+    ridge(h * 0.85, 140, '#2c3a5c', 2.6);
+    x.fillStyle = 'rgba(255,255,255,.85)';
+    for (let px = 0; px <= w; px += 10) {
+      const y = h * 0.85 - Math.abs(Math.sin(px / 140 + 2.6)) * 140 - Math.abs(Math.cos(px / 70 + 2.6)) * 56;
+      if (y < h * 0.55) x.fillRect(px, y, 10, 14);
+    }
+    return cv;
+  }
+
+  function makeSceneCityNight() {
+    const w = 720, h = 540, cv = sampleCanvas(), x = cv.getContext('2d');
+    const sky = x.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, '#0c1230'); sky.addColorStop(1, '#241a3f');
+    x.fillStyle = sky; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#fff';
+    for (let i = 0; i < 70; i++) { x.globalAlpha = Math.random() * 0.8 + 0.2; x.fillRect(Math.random() * w, Math.random() * h * 0.55, 1.6, 1.6); }
+    x.globalAlpha = 1;
+    x.fillStyle = '#ffe9a8'; x.beginPath(); x.arc(w * 0.78, h * 0.18, 26, 0, 7); x.fill();
+    const buildings = [[0, 60, 220], [70, 110, 300], [150, 80, 260], [240, 140, 340], [380, 90, 280], [470, 120, 310], [560, 70, 240], [650, 100, 290]];
+    buildings.forEach(([bx, bw, bh], i) => {
+      x.fillStyle = i % 2 ? '#1a1440' : '#231a52';
+      x.fillRect(bx, h - bh, bw, bh);
+      x.fillStyle = '#ffd766';
+      for (let wx = bx + 8; wx < bx + bw - 8; wx += 16) for (let wy = h - bh + 10; wy < h - 10; wy += 18) if (Math.random() > 0.4) x.fillRect(wx, wy, 6, 9);
+    });
+    return cv;
+  }
+
+  function makeSceneForest() {
+    const w = 720, h = 540, cv = sampleCanvas(), x = cv.getContext('2d');
+    const sky = x.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, '#bfe6c8'); sky.addColorStop(1, '#eef8e6');
+    x.fillStyle = sky; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#ffe9a0'; x.globalAlpha = 0.6; x.beginPath(); x.arc(w * 0.5, h * 0.18, 80, 0, 7); x.fill(); x.globalAlpha = 1;
+    const tree = (tx, ty, s, col) => {
+      x.fillStyle = '#5a3d24'; x.fillRect(tx - 3 * s, ty, 6 * s, 28 * s);
+      x.fillStyle = col;
+      for (let i = 0; i < 3; i++) {
+        x.beginPath(); x.moveTo(tx, ty - (18 + i * 14) * s);
+        x.lineTo(tx - (20 - i * 2) * s, ty - (i * 14) * s + 6 * s);
+        x.lineTo(tx + (20 - i * 2) * s, ty - (i * 14) * s + 6 * s);
+        x.closePath(); x.fill();
+      }
+    };
+    const rowsDef = [[0.85, 0.9], [0.72, 1.15], [0.6, 1.4]];
+    let seed = 0;
+    rowsDef.forEach(([ty, s]) => { for (let tx = 20; tx < w; tx += 60 * s) { tree(tx + ((seed++) % 5) * 4, h * ty, s, seed % 2 ? '#2f7a45' : '#3c8f52'); } });
+    return cv;
+  }
+
+  function makeSceneSpace() {
+    const w = 720, h = 540, cv = sampleCanvas(), x = cv.getContext('2d');
+    const sky = x.createLinearGradient(0, 0, w, h);
+    sky.addColorStop(0, '#050318'); sky.addColorStop(1, '#1a0f3d');
+    x.fillStyle = sky; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#fff';
+    for (let i = 0; i < 160; i++) { x.globalAlpha = Math.random() * 0.8 + 0.2; const r = Math.random() < 0.9 ? 1 : 1.8; x.fillRect(Math.random() * w, Math.random() * h, r, r); }
+    x.globalAlpha = 1;
+    const pg = x.createRadialGradient(w * 0.68 - 20, h * 0.42 - 20, 10, w * 0.68, h * 0.42, 90);
+    pg.addColorStop(0, '#ffb37a'); pg.addColorStop(1, '#a8452f');
+    x.fillStyle = pg; x.beginPath(); x.arc(w * 0.68, h * 0.42, 90, 0, 7); x.fill();
+    x.strokeStyle = 'rgba(255,230,190,.7)'; x.lineWidth = 10;
+    x.save(); x.translate(w * 0.68, h * 0.42); x.rotate(-0.3); x.scale(1, 0.32);
+    x.beginPath(); x.arc(0, 0, 140, 0, 7); x.stroke(); x.restore();
+    x.fillStyle = '#d8d8e8'; x.beginPath(); x.arc(w * 0.18, h * 0.72, 34, 0, 7); x.fill();
+    return cv;
+  }
+
+  function makeSceneAurora() {
+    const w = 720, h = 540, cv = sampleCanvas(), x = cv.getContext('2d');
+    const sky = x.createLinearGradient(0, 0, 0, h);
+    sky.addColorStop(0, '#040616'); sky.addColorStop(1, '#0c1a2e');
+    x.fillStyle = sky; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#fff';
+    for (let i = 0; i < 90; i++) { x.globalAlpha = Math.random() * 0.7 + 0.15; x.fillRect(Math.random() * w, Math.random() * h * 0.6, 1.4, 1.4); }
+    x.globalAlpha = 1;
+    const band = (baseY, amp, col) => {
+      x.strokeStyle = col; x.lineWidth = 46; x.lineCap = 'round'; x.globalAlpha = 0.35;
+      x.beginPath();
+      for (let px = 0; px <= w; px += 10) x.lineTo(px, baseY + Math.sin(px / 90) * amp);
+      x.stroke(); x.globalAlpha = 1;
+    };
+    band(h * 0.28, 40, '#5fe6a8'); band(h * 0.36, 34, '#8b6dff'); band(h * 0.22, 26, '#2fe4ea');
+    x.fillStyle = '#0a0e1c'; x.beginPath(); x.moveTo(0, h);
+    for (let px = 0; px <= w; px += 12) x.lineTo(px, h * 0.78 + Math.sin(px / 80) * 20);
+    x.lineTo(w, h); x.closePath(); x.fill();
+    return cv;
+  }
+
+  function makeSceneDesert() {
+    const w = 720, h = 540, cv = sampleCanvas(), x = cv.getContext('2d');
+    const sky = x.createLinearGradient(0, 0, 0, h * 0.6);
+    sky.addColorStop(0, '#ffd6a0'); sky.addColorStop(1, '#ffb27a');
+    x.fillStyle = sky; x.fillRect(0, 0, w, h);
+    x.fillStyle = '#ffe9b0'; x.beginPath(); x.arc(w * 0.5, h * 0.42, 60, 0, 7); x.fill();
+    const dune = (base, amp, col) => {
+      x.fillStyle = col; x.beginPath(); x.moveTo(0, h);
+      for (let px = 0; px <= w; px += 12) x.lineTo(px, base - Math.sin(px / 160) * amp);
+      x.lineTo(w, h); x.closePath(); x.fill();
+    };
+    dune(h * 0.62, 30, '#e8a35f'); dune(h * 0.74, 36, '#d3813f'); dune(h * 0.88, 40, '#a85c2c');
+    const cactus = (cx, cy, s) => {
+      x.fillStyle = '#3f7a4a';
+      x.fillRect(cx - 6 * s, cy, 12 * s, 46 * s);
+      x.fillRect(cx - 24 * s, cy + 14 * s, 18 * s, 10 * s);
+      x.fillRect(cx - 24 * s, cy - 2 * s, 10 * s, 18 * s);
+      x.fillRect(cx + 8 * s, cy + 6 * s, 18 * s, 10 * s);
+      x.fillRect(cx + 16 * s, cy - 8 * s, 10 * s, 18 * s);
+    };
+    cactus(180, h * 0.82, 1); cactus(560, h * 0.86, 0.8);
+    return cv;
+  }
+
   const SAMPLES = [
     { name: 'Meadow',   make: makeSampleMeadow },
     { name: 'Sunset',   make: makeSampleSunset },
     { name: 'Balloons', make: makeSampleBalloons },
   ];
-  SAMPLES.forEach(s => { s.canvas = s.make(); }); // render once, reuse for thumbnail + puzzle
+  SAMPLES.forEach(s => { s.canvas = s.make(); });
 
   function buildSampleButtons() {
     const row = document.getElementById('sampleRow');
@@ -917,15 +1406,111 @@
       thumb.getContext('2d').drawImage(s.canvas, 0, 0, 120, 90);
       const label = document.createElement('span'); label.textContent = s.name;
       btn.appendChild(thumb); btn.appendChild(label);
-      btn.addEventListener('click', () => { state.img = s.canvas; buildPuzzle(); });
+      btn.addEventListener('click', () => { state.img = s.canvas; buildPuzzleFromControls(); });
       row.appendChild(btn);
     });
   }
   buildSampleButtons();
 
+  // ================================================================
+  //  CAMPAIGN — levels, unlocking, star ratings
+  // ================================================================
+  const LEVELS = [
+    { id: 'meadow',    name: 'Sunny Meadow',  cols: 3, rows: 2, rotate: false, par3: 25,  par2: 50,  scene: SAMPLES[0].canvas },
+    { id: 'balloons',  name: 'Balloon Ride',  cols: 4, rows: 3, rotate: false, par3: 45,  par2: 90,  scene: SAMPLES[2].canvas },
+    { id: 'sunset',    name: 'Golden Sunset', cols: 5, rows: 4, rotate: false, par3: 80,  par2: 150, scene: SAMPLES[1].canvas },
+    { id: 'ocean',     name: 'Open Ocean',    cols: 5, rows: 4, rotate: false, par3: 85,  par2: 160, scene: makeSceneOcean() },
+    { id: 'mountains', name: 'Snow Peaks',    cols: 6, rows: 5, rotate: false, par3: 130, par2: 240, scene: makeSceneMountains() },
+    { id: 'cityNight', name: 'City Lights',   cols: 6, rows: 5, rotate: true,  par3: 170, par2: 300, scene: makeSceneCityNight() },
+    { id: 'forest',    name: 'Deep Forest',   cols: 7, rows: 6, rotate: false, par3: 200, par2: 360, scene: makeSceneForest() },
+    { id: 'space',     name: 'Deep Space',    cols: 7, rows: 6, rotate: true,  par3: 260, par2: 440, scene: makeSceneSpace() },
+    { id: 'aurora',    name: 'Aurora Skies',  cols: 8, rows: 7, rotate: true,  par3: 340, par2: 560, scene: makeSceneAurora() },
+    { id: 'desert',    name: 'Desert Dusk',   cols: 9, rows: 8, rotate: true,  par3: 460, par2: 760, scene: makeSceneDesert() },
+  ];
+
+  function levelUnlocked(idx) {
+    if (idx === 0) return true;
+    const prevRec = save.levels[LEVELS[idx - 1].id];
+    return !!(prevRec && prevRec.stars >= 1);
+  }
+
+  function starsHtml(n) {
+    let h = '';
+    for (let i = 0; i < 3; i++) h += `<span class="mini-star${i < n ? ' filled' : ''}">★</span>`;
+    return h;
+  }
+
+  function renderLevelCards() {
+    const wrap = document.getElementById('levelCards');
+    wrap.innerHTML = '';
+    LEVELS.forEach((level, idx) => {
+      const unlocked = levelUnlocked(idx);
+      const rec = save.levels[level.id];
+      const card = document.createElement('button');
+      card.className = 'level-card' + (unlocked ? '' : ' locked') + (state.currentLevel && state.currentLevel.id === level.id ? ' active' : '');
+      card.disabled = !unlocked;
+      card.type = 'button';
+      const numTag = document.createElement('span'); numTag.className = 'lv-num'; numTag.textContent = String(idx + 1);
+      card.appendChild(numTag);
+      const thumb = document.createElement('canvas'); thumb.width = 96; thumb.height = 72;
+      thumb.getContext('2d').drawImage(level.scene, 0, 0, 96, 72);
+      card.appendChild(thumb);
+      const meta = document.createElement('div'); meta.className = 'lv-meta';
+      const nameEl = document.createElement('span'); nameEl.className = 'lv-name'; nameEl.textContent = level.name;
+      const piecesEl = document.createElement('span'); piecesEl.className = 'lv-pieces';
+      piecesEl.textContent = `${level.cols * level.rows} pc${level.rotate ? ' · rotate' : ''}`;
+      const starsEl = document.createElement('span'); starsEl.className = 'lv-stars';
+      starsEl.innerHTML = unlocked ? starsHtml(rec ? rec.stars : 0) : '🔒';
+      meta.appendChild(nameEl); meta.appendChild(piecesEl); meta.appendChild(starsEl);
+      card.appendChild(meta);
+      if (unlocked) card.addEventListener('click', () => {
+        startCampaignLevel(level);
+        document.getElementById('board').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
+      wrap.appendChild(card);
+    });
+  }
+
+  function updateProfileBar() {
+    const totalStars = LEVELS.reduce((s, l) => s + (save.levels[l.id] ? save.levels[l.id].stars : 0), 0);
+    document.getElementById('profileStars').textContent = `⭐ ${totalStars}/${LEVELS.length * 3}`;
+  }
+
+  function startCampaignLevel(level) {
+    const idx = LEVELS.findIndex(l => l.id === level.id);
+    if (!levelUnlocked(idx)) return;
+    state.mode = 'campaign';
+    state.currentLevel = level;
+    state.rotateOn = level.rotate;
+    rotateToggle.checked = level.rotate;
+    straightenBtn.hidden = !level.rotate;
+    updateHint();
+    levelNameChip.hidden = false;
+    levelNameChip.textContent = `${level.name} · ${level.cols * level.rows}pc`;
+    startPuzzle(level.scene, level.cols, level.rows);
+    renderLevelCards();
+  }
+
+  // ---------- Mode switching ----------
+  const tabCampaign = document.getElementById('tabCampaign');
+  const tabFree = document.getElementById('tabFree');
+  function setMode(mode) {
+    state.mode = mode;
+    tabCampaign.classList.toggle('active', mode === 'campaign');
+    tabFree.classList.toggle('active', mode === 'free');
+    document.getElementById('campaignPanel').hidden = mode !== 'campaign';
+    document.getElementById('freePanel').hidden = mode !== 'free';
+    levelNameChip.hidden = mode !== 'campaign';
+    if (mode === 'campaign' && !state.currentLevel) {
+      const resumed = LEVELS.find(l => l.id === save.lastLevel);
+      startCampaignLevel(resumed || LEVELS[0]);
+    }
+  }
+  tabCampaign.addEventListener('click', () => setMode('campaign'));
+  tabFree.addEventListener('click', () => setMode('free'));
+
   // ---------- Print & save ----------
-  function buildOutlineCanvas(scaleUp) {
-    // Re-render the picture + puzzle cut lines at higher resolution for printing
+  function buildOutlineCanvas() {
     const iw = state.img.width, ih = state.img.height;
     const cap = 1800;
     let s = Math.min(cap / iw, cap / ih); s = Math.min(s, 3);
@@ -934,13 +1519,11 @@
     cv.width = W; cv.height = H;
     const x = cv.getContext('2d');
     x.drawImage(state.img, 0, 0, W, H);
-    // rebuild edges at this size using stored params
     const edges = buildEdges(state.rows, state.cols, W, H, state.edgeParams);
     const drawEdge = (pts) => { x.beginPath(); x.moveTo(pts[0].x, pts[0].y);
       for (let i = 1; i < pts.length; i++) x.lineTo(pts[i].x, pts[i].y); x.stroke(); };
     x.lineJoin = 'round'; x.lineCap = 'round';
     const lw = Math.max(1.5, W / 500);
-    // white halo then dark line for visibility over any photo
     for (const pass of [['rgba(255,255,255,.85)', lw + 2], ['rgba(30,26,20,.9)', lw]]) {
       x.strokeStyle = pass[0]; x.lineWidth = pass[1];
       for (let r = 1; r < state.rows; r++) for (let c = 0; c < state.cols; c++) drawEdge(edges.hEdge[r][c]);
@@ -974,17 +1557,26 @@
   ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('drag'); }));
   drop.addEventListener('drop', (e) => { if (e.dataTransfer.files[0]) loadFromFile(e.dataTransfer.files[0]); });
 
-  document.getElementById('makeBtn').addEventListener('click', () => { if (state.img) buildPuzzle(); else { state.img = SAMPLES[0].canvas; buildPuzzle(); } });
+  document.getElementById('makeBtn').addEventListener('click', () => buildPuzzleFromControls());
   document.getElementById('shuffleBtn').addEventListener('click', () => { if (state.pieces.length) scatter(); });
+
   function updateHint() {
     stageHint.textContent = state.rotateOn
-      ? 'Tap a piece to rotate it, then drag it home. It only snaps when it\u2019s the right way up.'
-      : 'Drag a piece near its spot and it snaps into place. Corners and edges are the easy way in.';
+      ? 'Tap a piece to rotate it. Drag pieces near each other to click them together, and drop upright near the frame to lock in.'
+      : 'Drag pieces near each other to click them together, or drop near the frame to lock a piece into place.';
   }
 
   function straightenAll() {
+    const seen = new Set();
     let changed = false;
-    for (const p of state.pieces) if (!p.placed && p.rot !== 0) { p.rot = 0; changed = true; }
+    for (const p of state.pieces) {
+      if (p.locked || seen.has(p.group)) continue;
+      seen.add(p.group);
+      if (p.rot !== 0) {
+        rotateGroup(p.group, pieceCenter(p.group[0]), (4 - p.rot) % 4);
+        changed = true;
+      }
+    }
     if (changed) render();
   }
 
@@ -1003,11 +1595,11 @@
   difficultySel.addEventListener('change', () => {
     customWrap.hidden = difficultySel.value !== 'custom';
     if (difficultySel.value === 'custom') updateCustomNote();
-    if (state.img) buildPuzzle();
+    buildPuzzleFromControls();
   });
   [colsInput, rowsInput].forEach(inp => inp.addEventListener('input', updateCustomNote));
   [colsInput, rowsInput].forEach(inp => inp.addEventListener('change', () => {
-    if (difficultySel.value === 'custom' && state.img) buildPuzzle();
+    if (difficultySel.value === 'custom') buildPuzzleFromControls();
   }));
   rotateToggle.addEventListener('change', () => {
     state.rotateOn = rotateToggle.checked;
@@ -1016,21 +1608,37 @@
     if (state.pieces.length) scatter();
   });
   straightenBtn.addEventListener('click', straightenAll);
-  document.getElementById('againBtn').addEventListener('click', () => scatter());
+  againBtn.addEventListener('click', () => scatter());
+  levelSelectBtn.addEventListener('click', () => {
+    hideWin();
+    document.getElementById('campaignPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   const hintBtn = document.getElementById('hintBtn');
-  hintBtn.addEventListener('click', () => { state.showGuide = !state.showGuide; hintBtn.classList.toggle('on', state.showGuide); render(); });
+  hintBtn.addEventListener('click', () => {
+    state.showGuide = !state.showGuide;
+    if (state.showGuide) state.hintUsed = true;
+    hintBtn.classList.toggle('on', state.showGuide);
+    render();
+  });
   const peekBtn = document.getElementById('peekBtn');
-  const peekOn = () => { state.peek = true; peekBtn.classList.add('on'); render(); };
+  const peekOn = () => { state.peek = true; state.peekUsed = true; peekBtn.classList.add('on'); render(); };
   const peekOff = () => { state.peek = false; peekBtn.classList.remove('on'); render(); };
   peekBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); peekOn(); });
   peekBtn.addEventListener('pointerup', peekOff);
   peekBtn.addEventListener('pointerleave', peekOff);
   peekBtn.addEventListener('pointercancel', peekOff);
 
+  document.getElementById('achBtn').addEventListener('click', () => { renderAchievements(); document.getElementById('achModal').classList.add('show'); });
+  document.getElementById('achClose').addEventListener('click', () => document.getElementById('achModal').classList.remove('show'));
+  document.getElementById('achModal').addEventListener('click', (e) => { if (e.target.id === 'achModal') e.currentTarget.classList.remove('show'); });
+
   // ---------- Boot ----------
-  state.img = SAMPLES[0].canvas;
-  buildPuzzle();
+  updateMuteBtn();
+  updateAchCount();
+  renderLevelCards();
+  updateProfileBar();
+  setMode('campaign');
 })();
 </script>
 </body>
